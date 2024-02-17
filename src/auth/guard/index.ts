@@ -1,0 +1,1 @@
+export { JwtGuard } from './guard';

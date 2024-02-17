@@ -11,13 +11,49 @@ datasource db {
 }
 
 model User {
-  id Int @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt()
 
-  email String
-  hash String
+  email String @unique
+  hash  String
 
   firstName String
-  lastName String
+  lastName  String
+  username  String @unique
+
+  UsersOnCourse UsersOnCourse[]
+
+  @@map("users")
+}
+
+model Course {
+  id          Int    @id @default(autoincrement())
+  title       String
+  description String
+
+  Video         Video[]
+  UsersOnCourse UsersOnCourse[]
+
+  @@map("courses")
+}
+
+model Video {
+  id  Int    @id @default(autoincrement())
+  url String
+
+  courseId Int
+  course   Course @relation(fields: [courseId], references: [id])
+
+  @@map("videos")
+}
+
+model UsersOnCourse {
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int // relation scalar field (used in the `@relation` attribute above)
+  course     Course   @relation(fields: [courseId], references: [id])
+  courseId   Int // relation scalar field (used in the `@relation` attribute above)
+  assignedAt DateTime @default(now())
+
+  @@id([userId, courseId])
 }
