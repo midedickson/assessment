@@ -3,9 +3,11 @@ import { Test } from '@nestjs/testing';
 import { AppModule } from 'src/app.module';
 import * as pactum from 'pactum';
 import { LoginDto, SignupDto } from 'src/auth/dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 describe('App e2e', () => {
   let app: INestApplication;
+  let prisma: PrismaService;
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
@@ -25,6 +27,10 @@ describe('App e2e', () => {
     pactum.request.setBaseUrl('http://localhost:3333');
   });
   afterAll(() => {
+    console.log('Closing app');
+
+    prisma = app.get(PrismaService);
+    prisma.cleanDb();
     app.close();
   });
 
@@ -190,6 +196,40 @@ describe('App e2e', () => {
           .get('/courses')
           .withQueryParams({ title: 'mide' })
           .expectStatus(404);
+      });
+    });
+
+    describe('User Registering Courses', () => {
+      describe('user course registration', () => {
+        it('should register user course', () => {
+          return pactum
+            .spec()
+            .post('/courses/$S{FirstCourseId}/register')
+            .withBearerToken('$S{userAt}')
+            .expectStatus(201);
+        });
+        it('should fail to register user course beacuse course has been previously registered', () => {
+          return pactum
+            .spec()
+            .post('/courses/$S{FirstCourseId}/register')
+            .withBearerToken('$S{userAt}')
+            .expectStatus(403);
+        });
+      });
+      it('should get all courses registered by user', () => {
+        return pactum
+          .spec()
+          .get('/courses/users/registered')
+          .withBearerToken('$S{userAt}')
+          .expectStatus(200);
+      });
+      it('should get all users registered under a course', () => {
+        return pactum
+          .spec()
+          .get('/courses/$S{FirstCourseId}/users')
+          .withBearerToken('$S{userAt}')
+          .inspect()
+          .expectStatus(200);
       });
     });
   });

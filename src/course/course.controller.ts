@@ -1,5 +1,7 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { CourseService } from './course.service';
+import { JwtGuard } from 'src/auth/guard';
+import { GetUser } from 'src/auth/decorators';
 
 @Controller('courses')
 export class CourseController {
@@ -18,5 +20,26 @@ export class CourseController {
   @Get()
   async searchCourseByTitle(@Param('title') title: string) {
     return await this.courseService.searchCourseByTitle(title);
+  }
+
+  @UseGuards(JwtGuard)
+  @Post(':id/register')
+  async registerUserToCourse(
+    @GetUser('id') userId: string,
+    @Param('id') courseId: string,
+  ) {
+    return await this.courseService.registerUserToCourse(+userId, +courseId);
+  }
+
+  @UseGuards(JwtGuard)
+  @Get(':id/users')
+  async getUsersRegisteredUnderACourses(@Param('id') userId: string) {
+    return await this.courseService.getUsersRegisteredUnderACourse(+userId);
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('users/registered')
+  async getUsersRegisteredCourses(@GetUser('id') userId: string) {
+    return await this.courseService.getUsersRegisteredCourses(+userId);
   }
 }
