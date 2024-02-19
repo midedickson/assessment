@@ -232,14 +232,13 @@ describe('App e2e', () => {
           .expectStatus(200);
       });
     });
-  });
-
-  describe('Videos', () => {
     describe('Get all videos in course', () => {
-      it.todo('should get all videos in course');
-    });
-    describe('Get video metadata by id', () => {
-      it.todo('should video metadata by id');
+      it('should get all videos in course', () => {
+        return pactum
+          .spec()
+          .get('/courses/$S{FirstCourseId}/videos')
+          .expectStatus(200);
+      });
     });
   });
 });

@@ -103,7 +103,9 @@ export class CourseService {
         where: {
           UsersOnCourse: {
             some: {
-              courseId: courseId,
+              courseId: {
+                equals: courseId,
+              },
             },
           },
         },
@@ -113,5 +115,16 @@ export class CourseService {
     } catch (err) {
       throw err;
     }
+  }
+
+  async findAllVideosInCourse(courseId: number) {
+    // this would normally come from a NoSQL database like MongoDB
+    return await this.prismaService.video.findMany({
+      where: {
+        courseId: {
+          equals: courseId,
+        },
+      },
+    });
   }
 }

@@ -24,4 +24,20 @@ const courseDummies: DummyCourse[] = [
   },
 ];
 
-export { courseDummies };
+const coursesWithVideos = courseDummies.map((course) => ({
+  ...course,
+  videos: [
+    {
+      url:
+        'http://example.com/video1-for-' +
+        course.title.replace(/\s+/g, '-').toLowerCase(),
+    },
+    {
+      url:
+        'http://example.com/video2-for-' +
+        course.title.replace(/\s+/g, '-').toLowerCase(),
+    },
+  ],
+}));
+
+export { coursesWithVideos };

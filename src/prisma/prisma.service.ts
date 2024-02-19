@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
-import { courseDummies } from 'src/course/dummy/data.dummy';
+import { coursesWithVideos } from 'src/course/dummy/data.dummy';
 
 @Injectable()
 export class PrismaService
@@ -31,17 +31,33 @@ export class PrismaService
     ]);
   }
 
-  onApplicationShutdown(signal?: string) {
+  async onApplicationShutdown(signal?: string) {
     if (signal === 'SIGINT') {
       console.log('Server closing!');
-      return this.cleanDb();
+      return await this.cleanDb();
     }
   }
 
   async onApplicationBootstrap() {
     console.log('Creating new courses!');
-    return await this.course.createMany({
-      data: courseDummies,
+    return coursesWithVideos.forEach(async (c) => {
+      const videos = c.videos;
+      delete c.videos;
+      try {
+        const course = await this.course.create({
+          data: {
+            title: c.title,
+            description: c.description,
+            author: c.author,
+          },
+        });
+
+        await this.video.createMany({
+          data: videos.map((v) => ({ ...v, courseId: course.id })),
+        });
+      } catch (err) {
+        throw err;
+      }
     });
   }
 }

@@ -42,4 +42,9 @@ export class CourseController {
   async getUsersRegisteredCourses(@GetUser('id') userId: string) {
     return await this.courseService.getUsersRegisteredCourses(+userId);
   }
+
+  @Get(':id/videos')
+  async findAllVideosInCourse(@Param('id') courseId: string) {
+    return await this.courseService.findAllVideosInCourse(+courseId);
+  }
 }
