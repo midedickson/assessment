@@ -1,13 +1,11 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from 'src/app.module';
-import { PrismaService } from 'src/prisma/prisma.service';
 import * as pactum from 'pactum';
 import { LoginDto, SignupDto } from 'src/auth/dto';
 
 describe('App e2e', () => {
   let app: INestApplication;
-  let prisma: PrismaService;
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
@@ -18,11 +16,11 @@ describe('App e2e', () => {
         whitelist: true,
       }),
     );
+    // Starts listening for shutdown hooks
+    app.enableShutdownHooks();
     await app.init();
-    await app.listen(3333);
 
-    prisma = app.get(PrismaService);
-    prisma.cleanDb();
+    await app.listen(3333);
 
     pactum.request.setBaseUrl('http://localhost:3333');
   });
@@ -49,8 +47,7 @@ describe('App e2e', () => {
             lastName: signupDto.lastName,
             username: signupDto.username,
           })
-          .expectStatus(400)
-          .inspect();
+          .expectStatus(400);
       });
       it('should throw error if password empty', () => {
         return pactum
@@ -62,8 +59,7 @@ describe('App e2e', () => {
             lastName: signupDto.lastName,
             username: signupDto.username,
           })
-          .expectStatus(400)
-          .inspect();
+          .expectStatus(400);
       });
       it('should throw error if username empty', () => {
         return pactum
@@ -75,11 +71,10 @@ describe('App e2e', () => {
             firstName: signupDto.firstName,
             lastName: signupDto.lastName,
           })
-          .expectStatus(400)
-          .inspect();
+          .expectStatus(400);
       });
       it('should throw error if payload is  empty', () => {
-        return pactum.spec().post('/auth/signup').expectStatus(400).inspect();
+        return pactum.spec().post('/auth/signup').expectStatus(400);
       });
 
       it('should signup', () => {
@@ -87,8 +82,15 @@ describe('App e2e', () => {
           .spec()
           .post('/auth/signup')
           .withJson(signupDto)
-          .expectStatus(201)
-          .inspect();
+          .expectStatus(201);
+      });
+
+      it('should not signup existing user', () => {
+        return pactum
+          .spec()
+          .post('/auth/signup')
+          .withJson(signupDto)
+          .expectStatus(403);
       });
     });
     describe('Signin', () => {
@@ -104,8 +106,7 @@ describe('App e2e', () => {
           .withJson({
             email: loginDto.email,
           })
-          .expectStatus(400)
-          .inspect();
+          .expectStatus(400);
       });
       it('should throw error if both username and email is empty', () => {
         return pactum
@@ -114,11 +115,10 @@ describe('App e2e', () => {
           .withJson({
             password: loginDto.password,
           })
-          .expectStatus(400)
-          .inspect();
+          .expectStatus(400);
       });
       it('should throw error if payload is  empty', () => {
-        return pactum.spec().post('/auth/login').expectStatus(400).inspect();
+        return pactum.spec().post('/auth/login').expectStatus(400);
       });
       it('should signin with email', () => {
         return pactum
@@ -128,8 +128,7 @@ describe('App e2e', () => {
             email: loginDto.email,
             password: loginDto.password,
           })
-          .expectStatus(200)
-          .inspect();
+          .expectStatus(200);
       });
       it('should signin with username', () => {
         return pactum
@@ -160,13 +159,38 @@ describe('App e2e', () => {
   });
   describe('Courses', () => {
     describe('Get all courses', () => {
-      it.todo('should get all courses');
+      it('should get all courses', () => {
+        return pactum
+          .spec()
+          .get('/courses')
+          .expectStatus(200)
+          .stores('FirstCourseId', '[0].id');
+      });
     });
     describe('Get courses by id', () => {
-      it.todo('should get courses by id');
+      it('should get courses by id', () => {
+        return pactum
+          .spec()
+          .get('/courses/$S{FirstCourseId}')
+          .expectStatus(200);
+      });
     });
     describe('Search Courses by title', () => {
-      it.todo('should search courses by title');
+      it('should search courses by title and exist', () => {
+        pactum
+          .spec()
+          .get('/courses')
+          .withQueryParams({ title: 'software' })
+          .inspect()
+          .expectStatus(200);
+      });
+      it('should search courses by title and not exist', () => {
+        pactum
+          .spec()
+          .get('/courses')
+          .withQueryParams({ title: 'mide' })
+          .expectStatus(404);
+      });
     });
   });
 
