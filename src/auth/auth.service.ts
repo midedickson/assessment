@@ -14,6 +14,13 @@ export class AuthService {
     private jwt: JwtService,
     private config: ConfigService,
   ) {}
+
+  /**
+   * Logs an existing user in.
+   * @param dto {LoginDto} - The user's log in information.
+   * @returns The token of the identified user.
+   * @throws {ForbiddenException} If the email and password don't match.
+   */
   async login(loginDto: LoginDto) {
     let user: User;
     if (loginDto.email) {
